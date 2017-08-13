@@ -43,11 +43,8 @@ gaugetb <- as_tibble(gauge)
 gaugetb$year <- year(gaugetb$Date)
 gaugetb$yday <- yday(gaugetb$Date)
 
-# this code is temporarily disabled. Sometimes displaying 2017 was screwing up the
-# joyplot, dunno why
-
 # remove 2017, not sure why this was screwing things up
-#gaugetb <- filter(gaugetb, year<2017)
+gaugetb <- filter(gaugetb, year<2017)
 
 #create joyplot
 p <- ggplot(gaugetb, aes(yday, -year, height = X_00060_00003, group=as.factor(year), fill=as.factor(year))) +
