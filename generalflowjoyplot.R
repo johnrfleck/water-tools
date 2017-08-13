@@ -43,7 +43,8 @@ gaugetb <- as_tibble(gauge)
 gaugetb$year <- year(gaugetb$Date)
 gaugetb$yday <- yday(gaugetb$Date)
 
-# remove 2017, not sure why this was screwing things up
+# remove 2017, not sure why this was screwing up the display for some gaugues
+# try commenting it out - for some sites it works fine without removing 2017
 gaugetb <- filter(gaugetb, year<2017)
 
 #create joyplot
