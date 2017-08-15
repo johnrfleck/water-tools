@@ -47,7 +47,8 @@ gaugetb$yday <- yday(gaugetb$Date)
 # try commenting it out - for some sites it works fine without removing 2017
 gaugetb <- filter(gaugetb, year<2017)
 
-#create joyplot
+# create joyplot
+# manually adjusting "scale" can help achieving desired look
 p <- ggplot(gaugetb, aes(yday, -year, height = X_00060_00003, group=as.factor(year), fill=as.factor(year))) +
   geom_joy(stat="identity", scale=3, size=0.1) +
   theme(legend.position="none") +
