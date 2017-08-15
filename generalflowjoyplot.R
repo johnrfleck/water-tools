@@ -17,6 +17,8 @@ library(ggjoy) # create joyplots
 # prompt user for gauge number
 siteNo <- readline(prompt="Enter a gauge number: ")
 
+# prompt for user input scale number
+uscale <- readline(prompt="Enter scale: ")
 # get station name for later display purposes
 sta_meta <- readNWISsite(siteNo)
 
@@ -48,9 +50,8 @@ gaugetb$yday <- yday(gaugetb$Date)
 gaugetb <- filter(gaugetb, year<2017)
 
 # create joyplot
-# manually adjusting "scale" can help achieving desired look
 p <- ggplot(gaugetb, aes(yday, -year, height = X_00060_00003, group=as.factor(year), fill=as.factor(year))) +
-  geom_joy(stat="identity", scale=3, size=0.1) +
+  geom_joy(stat="identity", scale=as.numeric(uscale), size=0.1) +
   theme(legend.position="none") +
   ggtitle(sta_meta$station_nm) +
   ylab("flow") +
