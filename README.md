@@ -10,3 +10,7 @@ User inputs include gauge number and a "scale" factor that governs the relative 
 leesferry.jpg
 
 Sample image of flow at Lee's Ferry on the Colorado River. USGS gauge #09380000
+
+gauge_this_year.r
+
+For a specified gauge, downloads USGS data and plots current year in the context of historical data for this point in a year.
