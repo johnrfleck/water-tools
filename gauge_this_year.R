@@ -1,4 +1,5 @@
-# download general data on a stream gauge
+# graph this year's flow on a river compared to historic record
+# Uses USGS's excelelent dataRetrieval package
 # tutorial here: https://owi.usgs.gov/R/dataRetrieval.html#1
 # Albuquerque gauge to use as example: 08330000
 
