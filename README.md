@@ -14,3 +14,7 @@ Sample image of flow at Lee's Ferry on the Colorado River. USGS gauge #09380000
 gauge_this_year.r
 
 For a specified gauge, downloads USGS data and plots current year in the context of historical data for this point in a year.
+
+flow_threshold.r
+
+For a specified gauge, downloads USGS data and calculates and displays the number of days in each year when flow dropped below a specified threshold.
