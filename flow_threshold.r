@@ -18,7 +18,7 @@ library(lubridate)
 siteNo <- readline(prompt="Enter a gauge number: ")
 
 #get threshold
-threshold <- readline(prompt="Enter desired threshold: ")
+threshold <- as.numeric(readline(prompt="Enter desired threshold: "))
 
 # get station metadata
 gauge_meta <- readNWISsite(siteNo)
@@ -42,7 +42,7 @@ gauge_daily <- gauge %>%
   mutate(year=year(Date))
 
 #check to remove spurious negative number that showed up that one time
-gauge_daily <- filter(gauge_daily, flow>0)
+gauge_daily <- filter(gauge_daily, flow>-1)
 
 
 tograph <- count(gauge_daily, year, flow<=threshold)
@@ -50,8 +50,9 @@ tograph <- filter(tograph, tograph$`flow <= threshold` == TRUE)
 
 # plot
 ggplot(data=tograph, aes(x=year, y=n)) + 
-  geom_bar(stat="identity") + xlim(min(tograph$year),max(tograph$year)) + 
-  labs(title=paste("Days with flow less than", threshold, "cfs"),
+  xlim(min(gauge_daily$year),max(gauge_daily$year)) +
+  geom_bar(stat="identity") + 
+  labs(title=paste("Days with flow", threshold, "cfs or less"),
        subtitle=gauge_meta$station_nm, 
        x="year", 
        y="number of days", 
