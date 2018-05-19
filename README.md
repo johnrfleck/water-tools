@@ -18,3 +18,7 @@ For a specified gauge, downloads USGS data and plots current year in the context
 flow_threshold.r
 
 For a specified gauge, downloads USGS data and calculates and displays the number of days in each year when flow dropped below a specified threshold.
+
+annual_gauge.r
+
+For a specified gauge, downloads USGS data and calculates and displays annual flow, in acre feet, along with mean and median.
