@@ -49,7 +49,7 @@ this_year <- filter(gauge_daily, year==2018)
 
 ggplot(data=gauge_daily, aes(x=yday, y=flow+1, group=year)) + 
   geom_path(alpha=0.1) +
-  geom_path(data=this_year, aes(x=yday, y=flow+1, colour="blue"), show.legend=F, size=1) +
+  geom_path(data=this_year, aes(x=yday, y=flow+1), colour="blue", show.legend=F, size=1) +
   labs(title=gauge_meta$station_nm,
        x = "day of the year",
        y = "flow, cubic feet per second",
