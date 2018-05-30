@@ -7,17 +7,12 @@ library(tidyverse)
 # parameters for USGS API
 
 #get gauge number
-
 siteNo <- readline(prompt="Enter a gauge number: ")
 
-# parameters for USGS API
-
+#get station metadata
 sta_meta <- readNWISsite(siteNo)
 
-print(sta_meta$station_nm)
-
-
-
+# parameters for USGS API
 
 # reasonable start date
 startDate <- "1970-10-01"

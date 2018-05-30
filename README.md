@@ -22,3 +22,7 @@ For a specified gauge, downloads USGS data and calculates and displays the numbe
 annual_gauge.r
 
 For a specified gauge, downloads USGS data and calculates and displays annual flow, in acre feet, along with mean and median.
+
+general_groundwater.r
+
+Graph USGS data for a specified groundwater monitoring well.
