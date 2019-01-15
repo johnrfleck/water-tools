@@ -27,12 +27,11 @@ gauge <- as_tibble(gauge <- readNWISdv(siteNo, pCode, startDate, endDate,
                     statCd))
 # use pipes to rename flow variable, select ones we need, and
 # add the year
-# remove 1942 because we don't have complete data
 gauge_daily <- gauge %>%
   rename(flow = X_00060_00003) %>%
   select(Date, flow) %>%
   mutate(year=year(Date)) %>%
-  filter(year < 2018)
+  filter(year < 2019)
 
 # create annual average flows
 # the *724 part converts cfs to af per year
