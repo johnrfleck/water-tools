@@ -45,11 +45,13 @@ gauge_daily$yday <- yday(gauge_daily$Date)
 # filter up to one day after today's date
 # gauge_daily <- filter(gauge_daily, yday < (today+1))
 
-this_year <- filter(gauge_daily, year==2018)
+last_year <- filter(gauge_daily, year==2018)
+this_year <- filter(gauge_daily, year==2019)
 
 ggplot(data=gauge_daily, aes(x=yday, y=flow+1, group=year)) + 
   geom_path(alpha=0.1) +
-  geom_path(data=this_year, aes(x=yday, y=flow+1), colour="firebrick1", show.legend=F, size=1) +
+  geom_path(data=last_year, aes(x=yday, y=flow+1), colour="firebrick1", show.legend=F, size=1) +
+  geom_path(data=this_year, aes(x=yday, y=flow+1), colour="blue", show.legend=F, size=1) +
   labs(title=gauge_meta$station_nm,
        x = "day of the year",
        y = "flow, cubic feet per second",
