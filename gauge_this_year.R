@@ -41,21 +41,24 @@ today <- yday(Sys.time())
 
 
 gauge_daily$yday <- yday(gauge_daily$Date)
+startdate <- paste("Data series start date: ", gauge_daily$Date[1])
 
 # filter up to one day after today's date
 # gauge_daily <- filter(gauge_daily, yday < (today+1))
 
 last_year <- filter(gauge_daily, year==2018)
 this_year <- filter(gauge_daily, year==2019)
+seventeen <- filter(gauge_daily, year==2017)
 
 ggplot(data=gauge_daily, aes(x=yday, y=flow+1, group=year)) + 
   geom_path(alpha=0.1) +
   geom_path(data=last_year, aes(x=yday, y=flow+1), colour="firebrick1", show.legend=F, size=1) +
   geom_path(data=this_year, aes(x=yday, y=flow+1), colour="blue", show.legend=F, size=1) +
+  geom_path(data=seventeen, aes(x=yday, y=flow+1), colour="green", show.legend=F, size=1) +
   labs(title=gauge_meta$station_nm,
        x = "day of the year",
        y = "flow, cubic feet per second",
-       caption = "Data: USGS\ngraph: University of New Mexico Water Resources Program") +
-  theme(strip.text = element_text(face = "bold", size = 8)) +
-  scale_y_log10()
-  
+       caption = "Data: USGS\ngraph: University of New Mexico Water Resources Program",
+       subtitle=startdate) +
+  theme(strip.text = element_text(face = "bold", size = 8))
+  #scale_y_log10()
