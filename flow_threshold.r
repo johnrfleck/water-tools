@@ -1,14 +1,11 @@
 # For drought analysis, determines the number of days in each year
 # of the historic record in which flow at a USGS river gauge
 # fell below an arbitrary threshold.
-# Uses USGS's excelelent dataRetrieval package
+# Uses USGS's excellent dataRetrieval package
 # tutorial here: https://owi.usgs.gov/R/dataRetrieval.html#1
 # Albuquerque gauge to use as example: 08330000
 
-# graph this year's flow on a river compared to historic record
-# Uses USGS's excelelent dataRetrieval package
-# tutorial here: https://owi.usgs.gov/R/dataRetrieval.html#1
-# Albuquerque gauge to use as example: 08330000
+
 
 library(dataRetrieval)
 library(tidyverse)
