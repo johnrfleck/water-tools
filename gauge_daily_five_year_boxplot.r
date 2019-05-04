@@ -42,9 +42,9 @@ today <- yday(Sys.time())
 
 
 gauge_daily$yday <- yday(gauge_daily$Date)
-startdate <- paste("Distribution of daily flows, USGS gauge", 
+startdate <- paste("Distribution of daily flows, five year bins\nUSGS gauge", 
                    gauge_meta$site_no, 
-                   "\nData series start date: ", 
+                   "\nData series start: ", 
                    gauge_daily$Date[1])
 
 gauge_daily$fiveyr <- floor((gauge_daily$year/5))*5
@@ -57,7 +57,7 @@ ggplot(data=gauge_daily, aes(x=yday)) +
       labs(title=gauge_meta$station_nm,
        x = "day of the year",
        y = "flow, cubic feet per second, log scale",
-       caption = "Data: USGS\ngraph: University of New Mexico Water Resources Program",
+       caption = "Data: USGS\ngraph: University of New Mexico Water Resources Program\ncode: https://github.com/johnrfleck/water-tools",
        subtitle=startdate) +
   theme(strip.text = element_text(face = "bold", size = 8))
   #scale_y_log10()
