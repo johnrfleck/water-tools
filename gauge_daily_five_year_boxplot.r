@@ -42,7 +42,10 @@ today <- yday(Sys.time())
 
 
 gauge_daily$yday <- yday(gauge_daily$Date)
-startdate <- paste("Data series start date: ", gauge_daily$Date[1])
+startdate <- paste("Distribution of daily flows, USGS gauge", 
+                   gauge_meta$site_no, 
+                   "\nData series start date: ", 
+                   gauge_daily$Date[1])
 
 gauge_daily$fiveyr <- floor((gauge_daily$year/5))*5
 
