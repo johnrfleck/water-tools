@@ -22,3 +22,7 @@ For a specified gauge, downloads USGS data and calculates and displays annual fl
 general_groundwater.r
 
 Graph USGS data for a specified groundwater monitoring well.
+
+gauge_daily_five_year_boxplot.r
+
+Graph daily flow at selected gauge in five-year binned boxplots. Log scale, useful for high-variability gauges, especially in showing low flows
