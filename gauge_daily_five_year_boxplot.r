@@ -55,7 +55,7 @@ ggplot(data=gauge_daily, aes(x=yday)) +
   geom_boxplot(mapping = aes(x=factor(fiveyr), y=flow)) +
       scale_y_log10() +
       labs(title=gauge_meta$station_nm,
-       x = "day of the year",
+       x = " ",
        y = "flow, cubic feet per second, log scale",
        caption = "Data: USGS\ngraph: University of New Mexico Water Resources Program\ncode: https://github.com/johnrfleck/water-tools",
        subtitle=startdate) +
