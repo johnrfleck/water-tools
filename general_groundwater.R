@@ -33,6 +33,7 @@ p <- ggplot(gw, aes(x=Date, y=(X_72019_00002*(-1)))) +
   geom_line(alpha=0.3) +
   stat_smooth(method="loess", se="false", span=0.2) +
   ylab("depth below surface") +
+  xlab("data USGS; graph University of New Mexico Water Resources Program")
   ggtitle(sta_meta$station_nm)
 
 
