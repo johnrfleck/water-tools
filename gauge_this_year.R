@@ -41,7 +41,7 @@ today <- yday(Sys.time())
 
 
 gauge_daily$yday <- yday(gauge_daily$Date)
-startdate <- paste("Data series start date: ", gauge_daily$Date[1])
+startdate <- paste("Data series start date: ", gauge_daily$Date[1], "\nblue 2019, red 2018, green 2017")
 
 # filter up to one day after today's date
 # gauge_daily <- filter(gauge_daily, yday < (today+1))
@@ -61,4 +61,4 @@ ggplot(data=gauge_daily, aes(x=yday, y=flow+1, group=year)) +
        caption = "Data: USGS\ngraph: University of New Mexico Water Resources Program",
        subtitle=startdate) +
   theme(strip.text = element_text(face = "bold", size = 8))
-  #scale_y_log10()
+  
