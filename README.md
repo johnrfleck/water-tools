@@ -27,10 +27,14 @@ gauge_daily_five_year_boxplot.r
 
 Graph daily flow at selected gauge in five-year binned boxplots. Log scale, useful for high-variability gauges, especially in showing low flows
 
-flow_threshold_above.f
+flow_threshold_above.r
 
 Graph number of days above a specified flow. Required input: USGS gauge number
 
 gauge_daily_five_year_violin_jitter.r
 
 Violin plot of flow at specified gauge, using ggplot's "jitter" to better visualize variability.
+
+gauge_to_date.r
+
+Total flow at a gauge year to date.
