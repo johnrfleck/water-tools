@@ -38,3 +38,7 @@ Violin plot of flow at specified gauge, using ggplot's "jitter" to better visual
 gauge_to_date.r
 
 Total flow at a gauge year to date.
+
+gauge_annual_peak.r
+
+Annual peak flow at specified gauge

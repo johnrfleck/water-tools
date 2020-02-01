@@ -46,7 +46,7 @@ startdate <- paste("Daily flows\nUSGS gauge ",
                    "\nData series start date: ",
                    gauge_daily$Date[1])
 
-this_year <- filter(gauge_daily, year==2019)
+this_year <- filter(gauge_daily, year==2020)
 
 
 by_day <- group_by(gauge_daily, yday)
