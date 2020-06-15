@@ -2,7 +2,7 @@
 # Uses USGS's excelelent dataRetrieval package
 # tutorial here: https://owi.usgs.gov/R/dataRetrieval.html#1
 # Albuquerque gauge to use as example: 08330000
-# uses log scale - easier to visualize given variability
+
 
 library(dataRetrieval)
 library(tidyverse)
@@ -63,7 +63,7 @@ ggplot(gauge_summary, aes(yday)) +
   geom_ribbon(aes(ymin=p10, ymax=p90, fill="10th to 90th percentile")) +
   geom_ribbon(aes(ymin=p30, ymax=p70, fill="30th to 70th percentile")) +
   geom_path(aes(x=yday, y=md, color="median"), linetype = 2) +
-  geom_path(data=this_year, aes(x=yday, y=flow+1, color="2019")) +
+  geom_path(data=this_year, aes(x=yday, y=flow+1, color="2020")) +
   scale_colour_manual(values=c("black","darkgrey"))+
   scale_fill_manual(values=c("lightblue","lightgreen")) +
   guides(fill=guide_legend(title=NULL)) +
