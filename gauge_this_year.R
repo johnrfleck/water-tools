@@ -29,11 +29,11 @@ gauge <- as_tibble(gauge <- readNWISdv(siteNo, pCode, startDate, endDate,
 # add the year
 gauge_daily <- gauge %>%
   rename(flow = X_00060_00003) %>%
-  select(Date, flow) %>%
+  select(Date, flow, site_no) %>%
   mutate(year=year(Date))
 
 #check to remove spurious negative number that showed up that one time
-gauge_daily <- filter(gauge_daily, flow>0)
+#gauge_daily <- filter(gauge_daily, flow>0)
 
 # get today's yday
 
@@ -51,13 +51,13 @@ this_year <- filter(gauge_daily, year==2020)
 
 by_day <- group_by(gauge_daily, yday)
 gauge_summary <- summarize(by_day, 
-                           mx = max(flow),
-                           mn = min(flow), 
-                           p90=quantile(flow, .9),
-                           p70=quantile(flow, .7),
-                           p30=quantile(flow, .3),
-                           p10=quantile(flow, .1),
-                           md=median(flow))
+                           mx = max(flow, na.rm = TRUE),
+                           mn = min(flow, na.rm = TRUE), 
+                           p90=quantile(flow, .9, na.rm = TRUE),
+                           p70=quantile(flow, .7, na.rm = TRUE),
+                           p30=quantile(flow, .3, na.rm = TRUE),
+                           p10=quantile(flow, .1, na.rm = TRUE),
+                           md=median(flow, na.rm = TRUE))
 ggplot(gauge_summary, aes(yday)) +
   theme_bw() +
   geom_ribbon(aes(ymin=p10, ymax=p90, fill="10th to 90th percentile")) +
@@ -68,6 +68,7 @@ ggplot(gauge_summary, aes(yday)) +
   scale_fill_manual(values=c("lightblue","lightgreen")) +
   guides(fill=guide_legend(title=NULL)) +
   guides(colour=guide_legend(title=NULL)) +
+  scale_y_log10() +
   labs(title=gauge_meta$station_nm,
        x = "day of the year",
        y = "flow, cubic feet per second",
