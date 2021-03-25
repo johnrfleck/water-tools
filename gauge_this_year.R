@@ -46,7 +46,7 @@ startdate <- paste("Daily flows\nUSGS gauge ",
                    "\nData series start date: ",
                    gauge_daily$Date[1])
 
-this_year <- filter(gauge_daily, year==2020)
+this_year <- filter(gauge_daily, year==2021)
 
 
 by_day <- group_by(gauge_daily, yday)
@@ -63,12 +63,12 @@ ggplot(gauge_summary, aes(yday)) +
   geom_ribbon(aes(ymin=p10, ymax=p90, fill="10th to 90th percentile")) +
   geom_ribbon(aes(ymin=p30, ymax=p70, fill="30th to 70th percentile")) +
   geom_path(aes(x=yday, y=md, color="median"), linetype = 2) +
-  geom_path(data=this_year, aes(x=yday, y=flow+1, color="2020")) +
+  geom_path(data=this_year, aes(x=yday, y=flow+1, color="2021")) +
   scale_colour_manual(values=c("black","darkgrey"))+
   scale_fill_manual(values=c("lightblue","lightgreen")) +
   guides(fill=guide_legend(title=NULL)) +
   guides(colour=guide_legend(title=NULL)) +
-  scale_y_log10() +
+  #scale_y_log10() +
   labs(title=gauge_meta$station_nm,
        x = "day of the year",
        y = "flow, cubic feet per second",
