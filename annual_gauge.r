@@ -35,7 +35,7 @@ gauge_daily <- gauge %>%
   rename(flow = X_00060_00003) %>%
   select(Date, flow) %>%
   mutate(year=year(Date)) %>%
-  filter(year < 2019)
+  filter(year < 2021)
 
 # create annual average flows
 # the *724 part converts cfs to af per year
