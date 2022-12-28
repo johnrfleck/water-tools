@@ -52,7 +52,7 @@ tograph <- filter(tograph, tograph$`flow <= threshold` == TRUE)
 
 # plot
 ggplot(data=tograph, aes(x=year, y=n)) + 
-  xlim(min(gauge_daily$year),max(gauge_daily$year)) +
+  xlim(min(gauge_daily$year-1),max(gauge_daily$year)+1) +
   geom_bar(stat="identity") + 
   labs(title=paste("Days with flow", threshold, "cfs or less"),
        subtitle = startdate_text,
