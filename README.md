@@ -1,6 +1,8 @@
 # water-tools
 John Fleck's water tools
 
+January 2024: These tools are no longer being maintained, but I'm leaving them here in case anyone finds them useful.
+
 generalflowjoyplot.r
 
 Using USGS dataRetrieval interface, create joyplot of arbitrary USGS streamgauge daily discharge. This can provide insights into changes in streamflow seasonality over time, because of climate variability, climate change, and human interventions (dam operations, for example).
