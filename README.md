@@ -11,7 +11,7 @@ User inputs include gauge number and a "scale" factor that governs the relative 
 
 gauge_this_year.r
 
-For a specified gauge, downloads USGS data and plots current year in the context of historical data for this point in a year.
+For a specified gauge, downloads USGS data and plots current year flow in the context of historical percentiles and medians. Auto-detects current year. Displays percentile bands (10th-90th, 30th-70th), period of record median, and split medians (1981-2000 vs 2001-present) for climate context.
 
 flow_threshold.r
 
