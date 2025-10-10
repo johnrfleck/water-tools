@@ -1,7 +1,29 @@
 # water-tools
 John Fleck's water tools
 
-April 2025: Returning to maintenance of these tools.
+October 2025: Major refactoring and modernization.
+- Created usgs_gage_utils.r - reusable utility library for all gage analysis tools
+- Refactored gauge_this_year.r to use utilities (49% code reduction)
+- Auto-detection of current year (no more manual updates)
+- Consistent visualization standards across all tools
+- Uses USGS spelling "gage" not "gauge" (honoring stream gager tradition)
+
+## usgs_gage_utils.r
+
+Reusable utility functions for USGS stream gage analysis. All tools now use this library to ensure consistency and eliminate code duplication.
+
+**Data Fetching:** `fetch_gage_streamflow()` - Standardized USGS data retrieval
+**Analysis:** Percentiles, current year detection, split medians for climate context
+**Visualization:** Standard colors, themes, attribution, month labels
+
+Example gage numbers:
+- 08330000 - Rio Grande at Albuquerque, NM
+- 08313000 - Rio Grande at Otowi Bridge, NM
+- 08332010 - Rio Grande Floodway near Bernardo, NM
+
+---
+
+## Tools
 
 generalflowjoyplot.r
 
