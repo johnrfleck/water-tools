@@ -31,9 +31,9 @@ Using USGS dataRetrieval interface, create joyplot of arbitrary USGS streamgauge
 
 User inputs include gauge number and a "scale" factor that governs the relative height of the plots. "3" is a sane starting point. Larger numbers are needed to highlight highly variable systems.
 
-gauge_this_year.r
+gage_this_year.R
 
-For a specified gauge, downloads USGS data and plots current year flow in the context of historical percentiles and medians. Auto-detects current year. Displays percentile bands (10th-90th, 30th-70th), period of record median, and split medians (1981-2000 vs 2001-present) for climate context.
+For a specified gage, downloads USGS data and plots current year flow in the context of historical percentiles and medians. Auto-detects current year. Displays percentile bands (10th-90th, 30th-70th), period of record median, and split medians (1981-2000 vs 2001-present) for climate context.
 
 flow_threshold.r
 
