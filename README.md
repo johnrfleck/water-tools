@@ -39,9 +39,9 @@ flow_threshold.r
 
 For a specified gauge, downloads USGS data and calculates and displays the number of days in each year when flow dropped below a specified threshold.
 
-annual_gauge.r
+annual_gage.r
 
-For a specified gauge, downloads USGS data and calculates and displays annual flow, in acre feet, along with mean and median.
+For a specified gage, downloads USGS data and displays annual flow in thousand acre-feet with mean reference line overlay. Excludes current incomplete year. Uses utilities library for consistent data fetching and visualization. X-axis shows 5-year interval breaks for better readability.
 
 general_groundwater.r
 
