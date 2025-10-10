@@ -37,7 +37,7 @@ For a specified gauge, downloads USGS data and plots current year flow in the co
 
 flow_threshold.r
 
-For a specified gauge, downloads USGS data and calculates and displays the number of days in each year when flow dropped below a specified threshold.
+For a specified gage, counts days per year where flow is above or below a user-specified threshold. Prompts for threshold direction (above/below). Useful for drought monitoring (low-flow conditions) or flood analysis (high-flow events). Includes current year for real-time monitoring. Uses utilities library with 5-year x-axis breaks.
 
 annual_gage.r
 
