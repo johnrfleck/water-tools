@@ -55,9 +55,9 @@ gauge_daily_five_year_violin_jitter.r
 
 Violin plot of flow at specified gauge, using ggplot's "jitter" to better visualize variability.
 
-gauge_to_date.r
+gage_to_date.R
 
-Total flow at a gauge year to date.
+For a specified gage, calculates total flow accumulated from January 1 to current date for all years in historical record. Filters all years to same day-of-year for fair comparison. Includes current year for real-time monitoring. Useful for tracking wet/dry years. Uses utilities library with 5-year x-axis breaks.
 
 gauge_annual_peak.r
 
