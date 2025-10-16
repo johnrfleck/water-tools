@@ -7,14 +7,23 @@ October 2025: Major refactoring and modernization.
 - Auto-detection of current year (no more manual updates)
 - Consistent visualization standards across all tools
 - Uses USGS spelling "gage" not "gauge" (honoring stream gager tradition)
+- Added comprehensive groundwater data support with automatic data discovery
+- Rewritten general_groundwater.R with modular design and improved data handling
 
 ## usgs_gage_utils.r
 
-Reusable utility functions for USGS stream gage analysis. All tools now use this library to ensure consistency and eliminate code duplication.
+Reusable utility functions for USGS stream gage and groundwater analysis. All tools now use this library to ensure consistency and eliminate code duplication.
 
-**Data Fetching:** `fetch_gage_streamflow()` - Standardized USGS data retrieval
-**Analysis:** Percentiles, current year detection, split medians for climate context
-**Visualization:** Standard colors, themes, attribution, month labels
+**Stream Gage Functions:**
+- `fetch_gage_streamflow()` - Standardized USGS streamflow data retrieval
+- Percentile calculations, current year detection, split medians for climate context
+
+**Groundwater Functions:**
+- `suggest_gw_options()` - Auto-discover available groundwater data at a site
+- `fetch_gw_series()` - Retrieve groundwater levels (daily or manual measurements)
+- Normalizers for handling different USGS groundwater data formats
+
+**Visualization:** Standard colors, themes, attribution (with GitHub link), month labels
 
 Example gage numbers:
 - 08330000 - Rio Grande at Albuquerque, NM
@@ -43,9 +52,13 @@ annual_gage.r
 
 For a specified gage, downloads USGS data and displays annual flow in thousand acre-feet with mean reference line overlay. Excludes current incomplete year. Uses utilities library for consistent data fetching and visualization. X-axis shows 5-year interval breaks for better readability.
 
-general_groundwater.r
+general_groundwater.R
 
-Graph USGS data for a specified groundwater monitoring well.
+Interactive tool for retrieving and visualizing groundwater level data from USGS NWIS. Auto-discovers available data types at each site and prompts user for preferences. Supports two modes:
+- **daily_only** (default): Daily values showing depth below land surface
+- **manual_only**: Manual field measurements
+
+Features automatic date range detection, period-of-record display, loess smoothing overlay, and standardized visualization matching other water-tools. Saves both PNG graphics and CSV data files. Uses utilities library for consistent data fetching and visualization standards.
 
 gauge_daily_five_year_boxplot.r
 

@@ -66,6 +66,209 @@ fetch_gage_streamflow <- function(site_number,
   ))
 }
 
+# Groundwater Data Functions ---------------------------------------------
+
+# Helper: Null coalescing operator
+`%||%` <- function(x, y) {
+  if(is.null(x) || length(x) == 0 || (is.character(x) && x == "")) y else x
+}
+
+# Helper: Suppress warnings and errors for data retrieval attempts
+trySuppress <- function(expr) {
+  suppressWarnings(suppressMessages(try(expr, silent = TRUE)))
+}
+
+# Groundwater parameter codes (in priority order)
+# 72019 = Depth to water level, feet below land surface
+# 62610 = Groundwater level above NGVD 1929, feet
+# 62611 = Groundwater level above NAVD 1988, feet
+# 62614 = Groundwater level above mean sea level, feet
+.gw_preferred_pcodes <- c("72019", "62610", "62611", "62614")
+
+# Statistic code priority for daily values
+# 00002 = minimum, 00003 = mean
+.stat_priority <- c("00002", "00003")
+
+# Normalizer: Manual groundwater level measurements
+.normalize_gwl <- function(df) {
+  as_tibble(df) %>%
+    transmute(
+      site_no = as.character(site_no),
+      date_time = suppressWarnings(as.POSIXct(lev_dt, tz = "UTC")),
+      date = as.Date(lev_dt),
+      depth_bls_ft = suppressWarnings(as.numeric(sl_lev_va)),
+      source = "gwl",
+      tz = "UTC"
+    ) %>%
+    filter(!is.na(depth_bls_ft))
+}
+
+# Normalizer: Daily value groundwater data
+.normalize_dv <- function(df, pcode) {
+  value_col <- grep(sprintf("^X_%s_", pcode), names(df), value = TRUE)[1]
+  as_tibble(df) %>%
+    transmute(
+      site_no = as.character(site_no),
+      date_time = as.POSIXct(Date),
+      date = Date,
+      depth_bls_ft = suppressWarnings(as.numeric(.data[[value_col]])),
+      source = "dv",
+      tz = "UTC"
+    ) %>%
+    filter(!is.na(depth_bls_ft))
+}
+
+# Normalizer: Unit/instantaneous value groundwater data
+.normalize_uv <- function(df, pcode) {
+  value_col <- grep(sprintf("^X_%s_", pcode), names(df), value = TRUE)[1]
+  tz_val <- attr(df$dateTime, "tzone") %||% "UTC"
+  as_tibble(df) %>%
+    transmute(
+      site_no = as.character(site_no),
+      date_time = as.POSIXct(dateTime, tz = tz_val),
+      date = as.Date(dateTime, tz = tz_val),
+      depth_bls_ft = suppressWarnings(as.numeric(.data[[value_col]])),
+      source = "uv",
+      tz = tz_val
+    ) %>%
+    filter(!is.na(depth_bls_ft))
+}
+
+#' Suggest Groundwater Data Options
+#'
+#' Queries USGS NWIS to discover what types of groundwater data are available
+#' at a site and returns summary information about data availability.
+#'
+#' @param site_no Character. USGS site number
+#' @return List containing:
+#'   - availability: Tibble of all available groundwater data types
+#'   - summaries: Tibble with date ranges and parameter codes by data type
+#'   - has_gwl: Logical, TRUE if manual groundwater levels available
+#'   - has_dv: Logical, TRUE if daily values available
+#'   - has_uv: Logical, TRUE if unit values available
+#' @examples
+#' # Check what data is available at a site
+#' info <- suggest_gw_options("350534106354703")
+#' print(info$summaries)
+suggest_gw_options <- function(site_no) {
+  avail <- whatNWISdata(siteNumber = site_no) %>% as_tibble()
+
+  if(!nrow(avail)) {
+    return(list(
+      availability = tibble(),
+      summaries = tibble(),
+      has_gwl = FALSE,
+      has_dv = FALSE,
+      has_uv = FALSE
+    ))
+  }
+
+  gw_rows <- avail %>%
+    filter(.data$data_type_cd %in% c("gw", "dv", "uv")) %>%
+    mutate(has_pcode = if_else(is.na(parm_cd), FALSE, parm_cd %in% .gw_preferred_pcodes))
+
+  summaries <- gw_rows %>%
+    group_by(data_type_cd) %>%
+    summarize(
+      earliest = suppressWarnings(min(begin_date, na.rm = TRUE)),
+      latest   = suppressWarnings(max(end_date, na.rm = TRUE)),
+      pcodes   = paste(unique(na.omit(parm_cd)), collapse = ", "),
+      .groups = "drop"
+    )
+
+  list(
+    availability = gw_rows,
+    summaries = summaries,
+    has_gwl = any(gw_rows$data_type_cd == "gw"),
+    has_dv  = any(gw_rows$data_type_cd == "dv" & gw_rows$has_pcode),
+    has_uv  = any(gw_rows$data_type_cd == "uv" & gw_rows$has_pcode)
+  )
+}
+
+#' Fetch Groundwater Time Series
+#'
+#' Retrieves groundwater level data from USGS NWIS. Supports two modes:
+#' - daily_only: Daily values (depth below land surface)
+#' - manual_only: Manual field measurements
+#'
+#' @param site_no Character. USGS site number
+#' @param mode Character. One of "daily_only" or "manual_only" (default: "daily_only")
+#' @param start_date Character. Start date "YYYY-MM-DD" or NULL for earliest available
+#' @param end_date Character or Date. End date (default: Sys.Date())
+#' @param pcode_priority Character vector. Parameter codes in priority order
+#' @param stat_priority Character vector. Statistic codes in priority order
+#' @return Tibble with columns: site_no, date_time, date, depth_bls_ft, source, tz
+#' @examples
+#' # Fetch daily groundwater data
+#' gw_data <- fetch_gw_series("350534106354703", mode = "daily_only")
+#'
+#' # Fetch manual measurements only
+#' gw_manual <- fetch_gw_series("350534106354703", mode = "manual_only")
+fetch_gw_series <- function(site_no,
+                            mode = c("daily_only", "manual_only"),
+                            start_date = NULL,
+                            end_date = Sys.Date(),
+                            pcode_priority = .gw_preferred_pcodes,
+                            stat_priority = .stat_priority) {
+  mode <- match.arg(mode)
+  info <- suggest_gw_options(site_no)
+
+  if(!nrow(info$availability)) return(tibble())
+
+  # Determine date range
+  all_dates <- info$availability %>%
+    summarize(
+      earliest = suppressWarnings(min(begin_date, na.rm = TRUE)),
+      latest   = suppressWarnings(max(end_date, na.rm = TRUE))
+    )
+
+  if(is.null(start_date) || start_date == "") {
+    start_date <- as.character(all_dates$earliest %||% as.Date("1900-01-01"))
+  }
+  if(is.null(end_date) || end_date == "") {
+    end_date <- as.character(all_dates$latest %||% Sys.Date())
+  }
+
+  out_list <- list()
+
+  # Manual groundwater levels
+  if(mode == "manual_only") {
+    if(info$has_gwl) {
+      gwl <- trySuppress(readNWISgwl(site_no, startDate = start_date, endDate = end_date))
+      if(!inherits(gwl, "try-error") && nrow(gwl)) {
+        out_list$gwl <- .normalize_gwl(gwl)
+      }
+    }
+  }
+
+  # Daily values
+  if(mode == "daily_only") {
+    dv_avail <- info$availability %>%
+      filter(data_type_cd == "dv", parm_cd %in% pcode_priority)
+
+    if(nrow(dv_avail)) {
+      pcode <- intersect(pcode_priority, unique(dv_avail$parm_cd))[1]
+      st <- intersect(stat_priority, unique(na.omit(dv_avail$stat_cd)))
+      stat_use <- st[1] %||% stat_priority[1]
+
+      dv <- trySuppress(readNWISdv(
+        site_no,
+        parameterCd = pcode,
+        startDate = start_date,
+        endDate = end_date,
+        statCd = stat_use
+      ))
+
+      if(!inherits(dv, "try-error") && nrow(dv)) {
+        out_list$dv <- .normalize_dv(dv, pcode)
+      }
+    }
+  }
+
+  ts <- bind_rows(out_list)
+  ts %>% arrange(date_time)
+}
+
 # Percentile Analysis ----------------------------------------------------
 
 #' Calculate Daily Percentiles
@@ -148,7 +351,7 @@ calculate_split_medians <- function(data) {
 #'
 #' @return Character string with data source and attribution
 standard_gage_attribution <- function() {
-  "Data Source: USGS\nJohn Fleck, Utton Center, University of New Mexico School of Law"
+  "Source: USGS NWIS\nJohn Fleck, Utton Center, University of New Mexico School of Law\nhttps://github.com/johnrfleck/water-tools"
 }
 
 #' Gage Percentile Band Colors
