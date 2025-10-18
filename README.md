@@ -69,9 +69,9 @@ gage_annual_boxplot.r
 
 Creates boxplot visualization of daily flows for each individual year. Shows year-to-year flow variability with one boxplot per year. X-axis labels every 5th year for readability, with smaller outlier points to reduce clutter. Useful for seeing detailed annual patterns and trends over long time periods. Uses utilities library and standardized visualization conventions.
 
-gauge_daily_five_year_violin_jitter.r
+gage_daily_five_year_violin_jitter.r
 
-Violin plot of flow at specified gauge, using ggplot's "jitter" to better visualize variability.
+Creates violin plot with jitter overlay of daily flows grouped into five-year periods. Uses log scale to better visualize flow variability, particularly at low flows. Shows both distribution shape (violin) and individual data points (jitter). Y-axis uses comma formatting (not exponential notation) for readability on log scale. Uses utilities library for data fetching and follows standardized visualization conventions.
 
 gage_to_date.R
 
