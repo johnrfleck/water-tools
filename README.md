@@ -60,9 +60,13 @@ Interactive tool for retrieving and visualizing groundwater level data from USGS
 
 Features automatic date range detection, period-of-record display, loess smoothing overlay, and standardized visualization matching other water-tools. Saves both PNG graphics and CSV data files. Uses utilities library for consistent data fetching and visualization standards.
 
-gauge_daily_five_year_boxplot.r
+gage_daily_five_year_boxplot.r
 
-Graph daily flow at selected gauge in five-year binned boxplots. Log scale, useful for high-variability gauges, especially in showing low flows
+Creates boxplot visualization of daily flows grouped into five-year periods. Useful for visualizing flow variability and changes over time. Uses linear scale with angled x-axis labels for readability. Uses utilities library for data fetching and follows standardized visualization conventions.
+
+gage_annual_boxplot.r
+
+Creates boxplot visualization of daily flows for each individual year. Shows year-to-year flow variability with one boxplot per year. X-axis labels every 5th year for readability, with smaller outlier points to reduce clutter. Useful for seeing detailed annual patterns and trends over long time periods. Uses utilities library and standardized visualization conventions.
 
 gauge_daily_five_year_violin_jitter.r
 
