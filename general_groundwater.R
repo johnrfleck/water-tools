@@ -40,8 +40,8 @@ plot_gw_depth <- function(ts, site_no, smooth_span = 0.2) {
 
   # Create plot following style guide standards
   p <- ggplot(ts, aes(x = date, y = depth_bls_ft)) +
-    geom_line(alpha = 0.7, linewidth = 0.4) +
-    geom_smooth(se = FALSE, method = "loess", span = smooth_span, linewidth = 0.6) +
+    geom_point(alpha = 0.7, size = 0.8) +
+    geom_smooth(se = FALSE, method = "loess", span = smooth_span, linewidth = 1.2) +
     scale_y_reverse(name = "Depth below land surface/elevation (ft)") +
     labs(title = title) +
     xlab(standard_gage_attribution()) +
