@@ -15,7 +15,8 @@ October 2025: Major refactoring and modernization.
 Reusable utility functions for USGS stream gage and groundwater analysis. All tools now use this library to ensure consistency and eliminate code duplication.
 
 **Stream Gage Functions:**
-- `fetch_gage_streamflow()` - Standardized USGS streamflow data retrieval
+- `fetch_gage_streamflow()` - Standardized USGS daily streamflow data retrieval
+- `fetch_gage_peak()` - Standardized USGS annual peak flow data retrieval
 - Percentile calculations, current year detection, split medians for climate context
 
 **Groundwater Functions:**
@@ -76,6 +77,6 @@ gage_to_date.R
 
 For a specified gage, calculates total flow accumulated from January 1 to current date for all years in historical record. Filters all years to same day-of-year for fair comparison. Includes current year for real-time monitoring. Useful for tracking wet/dry years. Uses utilities library with 5-year x-axis breaks.
 
-gauge_annual_peak.r
+gage_annual_peak.r
 
-Annual peak flow at specified gauge
+Visualizes annual peak flows over time for a specified gage. Uses USGS peak flow data which represents the highest instantaneous flow each year. Displays peaks as points with data series start date. Uses utilities library with new fetch_gage_peak() function for standardized data retrieval and follows visualization conventions.

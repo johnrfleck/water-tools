@@ -66,6 +66,50 @@ fetch_gage_streamflow <- function(site_number,
   ))
 }
 
+#' Fetch USGS Gage Peak Flow Data
+#'
+#' Retrieves annual peak flow data from USGS using dataRetrieval package
+#' and returns a standardized list with peak flow data and site metadata.
+#'
+#' @param site_number Character. USGS gage number (e.g., "08330000" for Albuquerque)
+#' @param start_date Character. Start date in "YYYY-MM-DD" format (default: "1895-02-01")
+#' @param end_date Date. End date (default: Sys.Date())
+#' @return List containing:
+#'   - data: Tibble with peak flow data (peak_dt, peak_va, etc.)
+#'   - site_name: Station name from metadata
+#'   - site_number: USGS site number
+#' @examples
+#' # Rio Grande at Albuquerque, NM
+#' abq_peaks <- fetch_gage_peak("08330000")
+#'
+#' # Rio Grande at Otowi Bridge, NM
+#' otowi_peaks <- fetch_gage_peak("08313000", start_date = "1900-01-01")
+fetch_gage_peak <- function(site_number,
+                            start_date = "1895-02-01",
+                            end_date = Sys.Date()) {
+
+  # Retrieve peak flow data
+  peak_data <- readNWISpeak(
+    siteNumbers = site_number,
+    startDate = start_date,
+    endDate = end_date
+  )
+
+  # Get site metadata
+  site_metadata <- readNWISsite(site_number)
+  site_name <- site_metadata$station_nm
+
+  # Convert to tibble and add year column for convenience
+  peak_data <- as_tibble(peak_data) %>%
+    mutate(Year = as.numeric(format(peak_dt, "%Y")))
+
+  return(list(
+    data = peak_data,
+    site_name = site_name,
+    site_number = site_number
+  ))
+}
+
 # Groundwater Data Functions ---------------------------------------------
 
 # Helper: Null coalescing operator
