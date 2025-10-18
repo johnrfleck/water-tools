@@ -34,11 +34,11 @@ Example gage numbers:
 
 ## Tools
 
-generalflowjoyplot.r
+gage_ridgeplot.r
 
-Using USGS dataRetrieval interface, create joyplot of arbitrary USGS streamgauge daily discharge. This can provide insights into changes in streamflow seasonality over time, because of climate variability, climate change, and human interventions (dam operations, for example).
+Creates ridge plot (formerly called "joyplot") visualization of daily discharge patterns over time. Useful for identifying changes in streamflow seasonality due to climate variability, climate change, and human interventions (dam operations, diversions, etc.).
 
-User inputs include gauge number and a "scale" factor that governs the relative height of the plots. "3" is a sane starting point. Larger numbers are needed to highlight highly variable systems.
+Prompts for gage number and scale factor. Scale factor controls vertical spacing/overlap of ridges - "3" is a good starting point. Larger numbers create more overlap, useful for highlighting highly variable systems. Uses utilities library for data fetching and follows standardized visualization conventions. Updated to use modern ggridges package with readable 5-year y-axis intervals.
 
 gage_this_year.R
 
