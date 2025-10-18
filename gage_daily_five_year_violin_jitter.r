@@ -60,8 +60,8 @@ subtitle_text <- paste("Distribution of daily flows, five-year bins\nData series
 plot_title <- paste("Daily Flows at the", site_name, "USGS Gage")
 
 p <- ggplot(daily_data, aes(x = five_year_bin, y = flow)) +
-  geom_violin(linewidth = 1) +
-  geom_jitter(size = 0.05, alpha = 0.15) +
+  geom_jitter(size = 0.05, alpha = 0.75) +
+  geom_violin(fill = "#D9D9D9", alpha = 0.65, linewidth = 1) +
   scale_y_log10(labels = comma) +  # Log scale with comma formatting (not exponential)
   labs(
     title = plot_title,
