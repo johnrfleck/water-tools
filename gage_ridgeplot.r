@@ -8,6 +8,12 @@
 # https://github.com/codeswitching/Reservoir-inflow-analysis/tree/master
 #
 # Usage: source("gage_ridgeplot.r")
+#
+# Example gage numbers:
+# 08330000 - Rio Grande at Albuquerque, NM
+# 08313000 - Rio Grande at Otowi Bridge, NM
+# 08332010 - Rio Grande Floodway near Bernardo, NM
+# 09380000 - Colorado River at Lees Ferry, AZ
 
 library(dataRetrieval)
 library(tidyverse)

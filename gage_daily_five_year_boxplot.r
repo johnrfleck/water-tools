@@ -5,6 +5,11 @@
 # John Fleck, Utton Center, University of New Mexico School of Law
 #
 # Usage: source("gage_daily_five_year_boxplot.r")
+#
+# Example gage numbers:
+# 08330000 - Rio Grande at Albuquerque, NM
+# 08313000 - Rio Grande at Otowi Bridge, NM
+# 08332010 - Rio Grande Floodway near Bernardo, NM
 
 library(dataRetrieval)
 library(tidyverse)
