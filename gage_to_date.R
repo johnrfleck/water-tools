@@ -37,7 +37,7 @@ year_to_date <- daily_data %>%
 ytd_totals <- year_to_date %>%
   group_by(Year) %>%
   summarize(
-    ytd_flow_af = mean(flow, na.rm = TRUE) * 1.98347 * todays_yday,
+    ytd_flow_af = mean(flow, na.rm = TRUE) * 1.98347 * todays_yday / 1000,
     .groups = "drop"
   )
 
@@ -67,6 +67,7 @@ p <- ggplot(ytd_totals, aes(x = Year, y = ytd_flow_af, fill = color_flag)) +
   geom_bar(stat = "identity") +
   scale_fill_identity() +
   scale_x_continuous(breaks = year_breaks) +
+  scale_y_continuous(labels = scales::comma_format()) +
   annotate("text", x = year_min, y = max(ytd_totals$ytd_flow_af) * 0.95,
            label = "Red: current year and years with less flow",
            hjust = 0, size = 3, color = "red") +
@@ -74,7 +75,7 @@ p <- ggplot(ytd_totals, aes(x = Year, y = ytd_flow_af, fill = color_flag)) +
     title = site_name,
     subtitle = subtitle_text,
     x = standard_gage_attribution(),
-    y = "acre feet"
+    y = "thousand acre feet (TAF)"
   ) +
   apply_gage_theme()
 
