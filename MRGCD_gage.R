@@ -1,6 +1,7 @@
 # Graph this year's flow at an MRGCD gage compared to historic record
 # Uses MRGCD-USBR archive data from the USBR ET Toolbox:
 # https://www.usbr.gov/uc/albuq/water/ETtoolboxV2/schematics/schematic_rio_grande.html
+# Four letter codes found there
 # Displays current year flow in context of historical percentiles and median
 #
 # Example gage identifiers:
