@@ -45,6 +45,10 @@ gage_this_year.R
 
 For a specified gage, downloads USGS data and plots current year flow in the context of historical percentiles and medians. Auto-detects current year. Displays percentile bands (10th-90th, 30th-70th), period of record median, and split medians (1981-2000 vs 2001-present) for climate context.
 
+MRGCD_gage.R
+
+For a specified MRGCD gage identifier, downloads 30-minute MRGCD-USBR Middle Rio Grande archive data and plots current year flow in the context of historical percentile bands and the period-of-record median. Prompts for a high-flow cutoff value to mask spurious readings before aggregating to daily mean flow. Always downloads current data from USBR rather than using a local cache.
+
 flow_threshold.r
 
 For a specified gage, counts days per year where flow is above or below a user-specified threshold. Prompts for threshold direction (above/below). Useful for drought monitoring (low-flow conditions) or flood analysis (high-flow events). Includes current year for real-time monitoring. Uses utilities library with 5-year x-axis breaks.
