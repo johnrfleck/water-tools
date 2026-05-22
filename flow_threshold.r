@@ -4,7 +4,7 @@
 # Includes current year for real-time monitoring
 #
 # Example gage numbers:
-# 08330000d - Rio Grande at Albuquerque, NM
+# 08330000 - Rio Grande at Albuquerque, NM
 # 08313000 - Rio Grande at Otowi Bridge, NM
 # 08332010 - Rio Grande Floodway near Bernardo, NM
 
