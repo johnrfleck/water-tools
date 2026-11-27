@@ -14,6 +14,8 @@ October 2025: Major refactoring and modernization.
 
 Reusable utility functions for USGS stream gage and groundwater analysis. All tools now use this library to ensure consistency and eliminate code duplication.
 
+**Data source:** daily flow, site names and groundwater now use the new USGS Water Data API through the `read_waterdata_*` functions in the `dataRetrieval` package (a recent release is required; update with `install.packages("dataRetrieval")`). An optional free API key (`API_USGS_PAT` environment variable) raises the rate limit. Annual peak flows (`fetch_gage_peak`, used by `gage_annual_peak.r`) still use the legacy `readNWISpeak()` because the replacement is only in the development version of dataRetrieval.
+
 **Stream Gage Functions:**
 - `fetch_gage_streamflow()` - Standardized USGS daily streamflow data retrieval
 - `fetch_gage_peak()` - Standardized USGS annual peak flow data retrieval
