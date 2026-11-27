@@ -11,6 +11,43 @@ library(lubridate)
 
 # Data Fetching ----------------------------------------------------------
 
+# Site ID and metadata helpers --------------------------------------------
+
+#' Convert a bare site number to the new API's monitoring-location ID
+#'
+#' The new USGS Water Data API identifies sites as "USGS-08330000" instead of
+#' "08330000". IDs that already carry an agency prefix are left alone.
+#'
+#' @param site_number Character. USGS site number, with or without "USGS-"
+#' @return Character vector of IDs with the "USGS-" prefix
+usgs_site_id <- function(site_number) {
+  site_number <- trimws(as.character(site_number))
+  ifelse(grepl("^[A-Za-z]+-", site_number), site_number, paste0("USGS-", site_number))
+}
+
+#' Fetch a site's name
+#'
+#' Looks up the station name via read_waterdata_monitoring_location().
+#' Falls back to the site number if the lookup fails or returns nothing.
+#'
+#' @param site_number Character. USGS site number
+#' @return Character. Station name (or the site number)
+fetch_site_name <- function(site_number) {
+  meta <- try(
+    read_waterdata_monitoring_location(
+      monitoring_location_id = usgs_site_id(site_number),
+      skipGeometry = TRUE
+    ),
+    silent = TRUE
+  )
+  if (inherits(meta, "try-error") || !nrow(meta) ||
+      !"monitoring_location_name" %in% names(meta)) {
+    return(as.character(site_number))
+  }
+  as.character(meta$monitoring_location_name[1])
+}
+
+
 #' Fetch USGS Gage Streamflow Data
 #'
 #' Retrieves daily streamflow data from USGS using dataRetrieval package
@@ -36,28 +73,36 @@ fetch_gage_streamflow <- function(site_number,
                                    start_date = "1895-02-01",
                                    end_date = Sys.Date()) {
 
-  # Parameter code for discharge (streamflow)
+  # Parameter code for discharge (streamflow); statistic 00003 = daily mean
   parameter_code <- "00060"
 
-  # Retrieve the data
-  daily_streamflow <- readNWISdv(
-    siteNumbers = site_number,
-    parameterCd = parameter_code,
-    startDate = start_date,
-    endDate = end_date
+  # Retrieve the data from the new USGS Water Data API.
+  # (Plain language: the old NWIS "waterservices" web service is being retired;
+  # read_waterdata_daily() talks to its replacement.) The new API wants IDs
+  # in the form "USGS-08330000" and a time interval rather than start/end args.
+  daily_streamflow <- read_waterdata_daily(
+    monitoring_location_id = usgs_site_id(site_number),
+    parameter_code = parameter_code,
+    statistic_id = "00003",
+    time = c(as.character(start_date), as.character(end_date)),
+    skipGeometry = TRUE
   )
 
-  # Get site metadata
-  site_metadata <- readNWISsite(site_number)
-  site_name <- site_metadata$station_nm
+  # Get site name from the monitoring-location metadata
+  site_name <- fetch_site_name(site_number)
 
-  # Add columns for Year and Day of Year, rename flow column
+  # Add columns for Date, Year and Day of Year, rename flow column.
+  # The new API returns the date in `time` and the discharge in `value`;
+  # we keep the Date/Year/DayOfYear/flow columns the plotting scripts expect.
   daily_streamflow <- daily_streamflow %>%
+    as_tibble() %>%
     mutate(
+      Date = as.Date(time),
       Year = as.numeric(format(Date, "%Y")),
       DayOfYear = as.numeric(format(Date, "%j")),
-      flow = X_00060_00003
-    )
+      flow = as.numeric(value)
+    ) %>%
+    arrange(Date)
 
   return(list(
     data = daily_streamflow,
@@ -68,7 +113,7 @@ fetch_gage_streamflow <- function(site_number,
 
 #' Fetch USGS Gage Peak Flow Data
 #'
-#' Retrieves annual peak flow data from USGS using dataRetrieval package
+#' Retrieves annual peak flow data from the USGS Water Data API (read_waterdata_peaks)
 #' and returns a standardized list with peak flow data and site metadata.
 #'
 #' @param site_number Character. USGS gage number (e.g., "08330000" for Albuquerque)
@@ -88,20 +133,30 @@ fetch_gage_peak <- function(site_number,
                             start_date = "1895-02-01",
                             end_date = Sys.Date()) {
 
-  # Retrieve peak flow data
-  peak_data <- readNWISpeak(
-    siteNumbers = site_number,
-    startDate = start_date,
-    endDate = end_date
+  # Retrieve annual peak discharge from the new Water Data API.
+  # (Plain language: replaces the retired readNWISpeak().) Dates are filtered
+  # here by year rather than in the query so peaks with incomplete dates
+  # (year known, day unknown) are not silently dropped by the server.
+  peak_raw <- read_waterdata_peaks(
+    monitoring_location_id = usgs_site_id(site_number),
+    parameter_code = "00060",
+    skipGeometry = TRUE
   )
 
-  # Get site metadata
-  site_metadata <- readNWISsite(site_number)
-  site_name <- site_metadata$station_nm
+  # Get site name from the monitoring-location metadata
+  site_name <- fetch_site_name(site_number)
 
-  # Convert to tibble and add year column for convenience
-  peak_data <- as_tibble(peak_data) %>%
-    mutate(Year = as.numeric(format(peak_dt, "%Y")))
+  # Keep the column names the plotting scripts expect:
+  # peak_dt = date of peak, peak_va = peak discharge in cfs.
+  peak_data <- as_tibble(peak_raw) %>%
+    mutate(
+      peak_dt = as.Date(time),
+      peak_va = as.numeric(value),
+      Year = as.numeric(coalesce(year, as.integer(format(peak_dt, "%Y"))))
+    ) %>%
+    filter(Year >= as.numeric(format(as.Date(start_date), "%Y")),
+           Year <= as.numeric(format(as.Date(end_date), "%Y"))) %>%
+    arrange(Year, peak_dt)
 
   return(list(
     data = peak_data,
@@ -134,13 +189,15 @@ trySuppress <- function(expr) {
 .stat_priority <- c("00002", "00003")
 
 # Normalizer: Manual groundwater level measurements
+# Input is the output of read_waterdata_field_measurements(): `time` is the
+# measurement date-time and `value` the reading.
 .normalize_gwl <- function(df) {
   as_tibble(df) %>%
     transmute(
-      site_no = as.character(site_no),
-      date_time = suppressWarnings(as.POSIXct(lev_dt, tz = "UTC")),
-      date = as.Date(lev_dt),
-      depth_bls_ft = suppressWarnings(as.numeric(sl_lev_va)),
+      site_no = sub("^[A-Za-z]+-", "", as.character(monitoring_location_id)),
+      date_time = suppressWarnings(as.POSIXct(time, tz = "UTC")),
+      date = as.Date(time),
+      depth_bls_ft = suppressWarnings(as.numeric(value)),
       source = "gwl",
       tz = "UTC"
     ) %>%
@@ -148,14 +205,15 @@ trySuppress <- function(expr) {
 }
 
 # Normalizer: Daily value groundwater data
-.normalize_dv <- function(df, pcode) {
-  value_col <- grep(sprintf("^X_%s_", pcode), names(df), value = TRUE)[1]
+# Input is the output of read_waterdata_daily(): `time` is the date, `value`
+# the reading. (The pcode argument is kept for backward compatibility.)
+.normalize_dv <- function(df, pcode = NULL) {
   as_tibble(df) %>%
     transmute(
-      site_no = as.character(site_no),
-      date_time = as.POSIXct(Date),
-      date = Date,
-      depth_bls_ft = suppressWarnings(as.numeric(.data[[value_col]])),
+      site_no = sub("^[A-Za-z]+-", "", as.character(monitoring_location_id)),
+      date_time = as.POSIXct(as.Date(time)),
+      date = as.Date(time),
+      depth_bls_ft = suppressWarnings(as.numeric(value)),
       source = "dv",
       tz = "UTC"
     ) %>%
@@ -163,15 +221,15 @@ trySuppress <- function(expr) {
 }
 
 # Normalizer: Unit/instantaneous value groundwater data
-.normalize_uv <- function(df, pcode) {
-  value_col <- grep(sprintf("^X_%s_", pcode), names(df), value = TRUE)[1]
-  tz_val <- attr(df$dateTime, "tzone") %||% "UTC"
+# (Not currently called by fetch_gw_series(); kept for future use.)
+.normalize_uv <- function(df, pcode = NULL) {
+  tz_val <- attr(df$time, "tzone") %||% "UTC"
   as_tibble(df) %>%
     transmute(
-      site_no = as.character(site_no),
-      date_time = as.POSIXct(dateTime, tz = tz_val),
-      date = as.Date(dateTime, tz = tz_val),
-      depth_bls_ft = suppressWarnings(as.numeric(.data[[value_col]])),
+      site_no = sub("^[A-Za-z]+-", "", as.character(monitoring_location_id)),
+      date_time = as.POSIXct(time, tz = tz_val),
+      date = as.Date(time, tz = tz_val),
+      depth_bls_ft = suppressWarnings(as.numeric(value)),
       source = "uv",
       tz = tz_val
     ) %>%
@@ -180,12 +238,17 @@ trySuppress <- function(expr) {
 
 #' Suggest Groundwater Data Options
 #'
-#' Queries USGS NWIS to discover what types of groundwater data are available
-#' at a site and returns summary information about data availability.
+#' Queries the USGS Water Data API to discover what types of groundwater data
+#' are available at a site and returns summary information about availability.
+#' Daily and continuous availability come from the time-series metadata
+#' (read_waterdata_ts_meta); manual measurements come from the
+#' field-measurements service (read_waterdata_field_measurements), because the
+#' old whatNWISdata() "gw" listing no longer exists.
 #'
 #' @param site_no Character. USGS site number
 #' @return List containing:
 #'   - availability: Tibble of all available groundwater data types
+#'     (data_type_cd: "gw" manual, "dv" daily, "uv" continuous)
 #'   - summaries: Tibble with date ranges and parameter codes by data type
 #'   - has_gwl: Logical, TRUE if manual groundwater levels available
 #'   - has_dv: Logical, TRUE if daily values available
@@ -195,9 +258,52 @@ trySuppress <- function(expr) {
 #' info <- suggest_gw_options("350534106354703")
 #' print(info$summaries)
 suggest_gw_options <- function(site_no) {
-  avail <- whatNWISdata(siteNumber = site_no) %>% as_tibble()
+  site_id <- usgs_site_id(site_no)
 
-  if(!nrow(avail)) {
+  # Daily / continuous series: time-series metadata for groundwater pcodes
+  ts_meta <- trySuppress(read_waterdata_ts_meta(
+    monitoring_location_id = site_id,
+    parameter_code = .gw_preferred_pcodes,
+    skipGeometry = TRUE
+  ))
+  ts_rows <- tibble()
+  if (!inherits(ts_meta, "try-error") && nrow(ts_meta)) {
+    ts_rows <- as_tibble(ts_meta) %>%
+      transmute(
+        data_type_cd = case_when(
+          computation_period_identifier == "Daily" ~ "dv",
+          computation_period_identifier == "Points" ~ "uv",
+          TRUE ~ NA_character_
+        ),
+        parm_cd = as.character(parameter_code),
+        stat_cd = as.character(statistic_id),
+        begin_date = as.Date(begin),
+        end_date = as.Date(end)
+      ) %>%
+      filter(!is.na(data_type_cd))
+  }
+
+  # Manual measurements: field-measurements service
+  fm <- trySuppress(read_waterdata_field_measurements(
+    monitoring_location_id = site_id,
+    parameter_code = .gw_preferred_pcodes,
+    skipGeometry = TRUE
+  ))
+  fm_rows <- tibble()
+  if (!inherits(fm, "try-error") && nrow(fm)) {
+    fm_rows <- as_tibble(fm) %>%
+      group_by(parm_cd = as.character(parameter_code)) %>%
+      summarize(
+        begin_date = min(as.Date(time), na.rm = TRUE),
+        end_date = max(as.Date(time), na.rm = TRUE),
+        .groups = "drop"
+      ) %>%
+      mutate(data_type_cd = "gw", stat_cd = NA_character_)
+  }
+
+  gw_rows <- bind_rows(ts_rows, fm_rows)
+
+  if(!nrow(gw_rows)) {
     return(list(
       availability = tibble(),
       summaries = tibble(),
@@ -207,8 +313,7 @@ suggest_gw_options <- function(site_no) {
     ))
   }
 
-  gw_rows <- avail %>%
-    filter(.data$data_type_cd %in% c("gw", "dv", "uv")) %>%
+  gw_rows <- gw_rows %>%
     mutate(has_pcode = if_else(is.na(parm_cd), FALSE, parm_cd %in% .gw_preferred_pcodes))
 
   summaries <- gw_rows %>%
@@ -231,9 +336,9 @@ suggest_gw_options <- function(site_no) {
 
 #' Fetch Groundwater Time Series
 #'
-#' Retrieves groundwater level data from USGS NWIS. Supports two modes:
-#' - daily_only: Daily values (depth below land surface)
-#' - manual_only: Manual field measurements
+#' Retrieves groundwater level data from the USGS Water Data API. Supports two modes:
+#' - daily_only: Daily values (read_waterdata_daily)
+#' - manual_only: Manual field measurements (read_waterdata_field_measurements)
 #'
 #' @param site_no Character. USGS site number
 #' @param mode Character. One of "daily_only" or "manual_only" (default: "daily_only")
@@ -256,6 +361,7 @@ fetch_gw_series <- function(site_no,
                             stat_priority = .stat_priority) {
   mode <- match.arg(mode)
   info <- suggest_gw_options(site_no)
+  site_id <- usgs_site_id(site_no)
 
   if(!nrow(info$availability)) return(tibble())
 
@@ -266,19 +372,31 @@ fetch_gw_series <- function(site_no,
       latest   = suppressWarnings(max(end_date, na.rm = TRUE))
     )
 
-  if(is.null(start_date) || start_date == "") {
+  start_date <- as.character(start_date)
+  end_date <- as.character(end_date)
+  if(length(start_date) == 0 || is.na(start_date) || start_date == "") {
     start_date <- as.character(all_dates$earliest %||% as.Date("1900-01-01"))
   }
-  if(is.null(end_date) || end_date == "") {
+  if(length(end_date) == 0 || is.na(end_date) || end_date == "") {
     end_date <- as.character(all_dates$latest %||% Sys.Date())
   }
+  time_range <- c(as.character(start_date), as.character(end_date))
 
   out_list <- list()
 
-  # Manual groundwater levels
+  # Manual groundwater levels (field measurements)
   if(mode == "manual_only") {
-    if(info$has_gwl) {
-      gwl <- trySuppress(readNWISgwl(site_no, startDate = start_date, endDate = end_date))
+    gw_avail <- info$availability %>%
+      filter(data_type_cd == "gw", parm_cd %in% pcode_priority)
+
+    if(nrow(gw_avail)) {
+      pcode <- intersect(pcode_priority, unique(gw_avail$parm_cd))[1]
+      gwl <- trySuppress(read_waterdata_field_measurements(
+        monitoring_location_id = site_id,
+        parameter_code = pcode,
+        time = time_range,
+        skipGeometry = TRUE
+      ))
       if(!inherits(gwl, "try-error") && nrow(gwl)) {
         out_list$gwl <- .normalize_gwl(gwl)
       }
@@ -295,12 +413,12 @@ fetch_gw_series <- function(site_no,
       st <- intersect(stat_priority, unique(na.omit(dv_avail$stat_cd)))
       stat_use <- st[1] %||% stat_priority[1]
 
-      dv <- trySuppress(readNWISdv(
-        site_no,
-        parameterCd = pcode,
-        startDate = start_date,
-        endDate = end_date,
-        statCd = stat_use
+      dv <- trySuppress(read_waterdata_daily(
+        monitoring_location_id = site_id,
+        parameter_code = pcode,
+        statistic_id = stat_use,
+        time = time_range,
+        skipGeometry = TRUE
       ))
 
       if(!inherits(dv, "try-error") && nrow(dv)) {

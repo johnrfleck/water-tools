@@ -1,5 +1,5 @@
 # USGS Groundwater Level Analysis Tool
-# Interactive script for retrieving and plotting groundwater levels from USGS NWIS
+# Interactive script for retrieving and plotting groundwater levels from the USGS Water Data API
 # John Fleck, Utton Center, University of New Mexico School of Law
 #
 # Usage: source("general_groundwater.R")
@@ -27,8 +27,7 @@ plot_gw_depth <- function(ts, site_no, smooth_span = 0.2) {
   if(!nrow(ts)) stop("No groundwater data found for this site.")
 
   # Get site name
-  st <- trySuppress(readNWISsite(site_no))
-  site_name <- if(!inherits(st, "try-error") && nrow(st)) st$station_nm else site_no
+  site_name <- fetch_site_name(site_no)
 
   # Calculate period of record
   start_year <- year(min(ts$date, na.rm = TRUE))
