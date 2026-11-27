@@ -36,7 +36,7 @@ fetch_site_name <- function(site_number) {
   meta <- try(
     read_waterdata_monitoring_location(
       monitoring_location_id = usgs_site_id(site_number),
-      skip_geometry = TRUE
+      skipGeometry = TRUE
     ),
     silent = TRUE
   )
@@ -85,7 +85,7 @@ fetch_gage_streamflow <- function(site_number,
     parameter_code = parameter_code,
     statistic_id = "00003",
     time = c(as.character(start_date), as.character(end_date)),
-    skip_geometry = TRUE
+    skipGeometry = TRUE
   )
 
   # Get site name from the monitoring-location metadata
@@ -113,7 +113,7 @@ fetch_gage_streamflow <- function(site_number,
 
 #' Fetch USGS Gage Peak Flow Data
 #'
-#' Retrieves annual peak flow data from USGS using dataRetrieval package
+#' Retrieves annual peak flow data from the USGS Water Data API (read_waterdata_peaks)
 #' and returns a standardized list with peak flow data and site metadata.
 #'
 #' @param site_number Character. USGS gage number (e.g., "08330000" for Albuquerque)
@@ -133,22 +133,30 @@ fetch_gage_peak <- function(site_number,
                             start_date = "1895-02-01",
                             end_date = Sys.Date()) {
 
-  # NOTE: peak flows have no replacement in the released dataRetrieval yet
-  # (only in the development version), so this still uses the legacy
-  # readNWISpeak(). It will stop working when USGS retires the old service.
-  # Retrieve peak flow data
-  peak_data <- readNWISpeak(
-    siteNumbers = site_number,
-    startDate = start_date,
-    endDate = end_date
+  # Retrieve annual peak discharge from the new Water Data API.
+  # (Plain language: replaces the retired readNWISpeak().) Dates are filtered
+  # here by year rather than in the query so peaks with incomplete dates
+  # (year known, day unknown) are not silently dropped by the server.
+  peak_raw <- read_waterdata_peaks(
+    monitoring_location_id = usgs_site_id(site_number),
+    parameter_code = "00060",
+    skipGeometry = TRUE
   )
 
   # Get site name from the monitoring-location metadata
   site_name <- fetch_site_name(site_number)
 
-  # Convert to tibble and add year column for convenience
-  peak_data <- as_tibble(peak_data) %>%
-    mutate(Year = as.numeric(format(peak_dt, "%Y")))
+  # Keep the column names the plotting scripts expect:
+  # peak_dt = date of peak, peak_va = peak discharge in cfs.
+  peak_data <- as_tibble(peak_raw) %>%
+    mutate(
+      peak_dt = as.Date(time),
+      peak_va = as.numeric(value),
+      Year = as.numeric(coalesce(year, as.integer(format(peak_dt, "%Y"))))
+    ) %>%
+    filter(Year >= as.numeric(format(as.Date(start_date), "%Y")),
+           Year <= as.numeric(format(as.Date(end_date), "%Y"))) %>%
+    arrange(Year, peak_dt)
 
   return(list(
     data = peak_data,
@@ -256,7 +264,7 @@ suggest_gw_options <- function(site_no) {
   ts_meta <- trySuppress(read_waterdata_ts_meta(
     monitoring_location_id = site_id,
     parameter_code = .gw_preferred_pcodes,
-    skip_geometry = TRUE
+    skipGeometry = TRUE
   ))
   ts_rows <- tibble()
   if (!inherits(ts_meta, "try-error") && nrow(ts_meta)) {
@@ -279,7 +287,7 @@ suggest_gw_options <- function(site_no) {
   fm <- trySuppress(read_waterdata_field_measurements(
     monitoring_location_id = site_id,
     parameter_code = .gw_preferred_pcodes,
-    skip_geometry = TRUE
+    skipGeometry = TRUE
   ))
   fm_rows <- tibble()
   if (!inherits(fm, "try-error") && nrow(fm)) {
@@ -364,10 +372,12 @@ fetch_gw_series <- function(site_no,
       latest   = suppressWarnings(max(end_date, na.rm = TRUE))
     )
 
-  if(is.null(start_date) || start_date == "") {
+  start_date <- as.character(start_date)
+  end_date <- as.character(end_date)
+  if(length(start_date) == 0 || is.na(start_date) || start_date == "") {
     start_date <- as.character(all_dates$earliest %||% as.Date("1900-01-01"))
   }
-  if(is.null(end_date) || end_date == "") {
+  if(length(end_date) == 0 || is.na(end_date) || end_date == "") {
     end_date <- as.character(all_dates$latest %||% Sys.Date())
   }
   time_range <- c(as.character(start_date), as.character(end_date))
@@ -385,7 +395,7 @@ fetch_gw_series <- function(site_no,
         monitoring_location_id = site_id,
         parameter_code = pcode,
         time = time_range,
-        skip_geometry = TRUE
+        skipGeometry = TRUE
       ))
       if(!inherits(gwl, "try-error") && nrow(gwl)) {
         out_list$gwl <- .normalize_gwl(gwl)
@@ -408,7 +418,7 @@ fetch_gw_series <- function(site_no,
         parameter_code = pcode,
         statistic_id = stat_use,
         time = time_range,
-        skip_geometry = TRUE
+        skipGeometry = TRUE
       ))
 
       if(!inherits(dv, "try-error") && nrow(dv)) {
